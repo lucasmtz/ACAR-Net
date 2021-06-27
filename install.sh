@@ -4,7 +4,7 @@
 conda create -y --prefix ./env python=3.9
 conda activate ./env
 conda install -y --file requirements.txt
-conda install -y -c conda-forge pre-commit easydict tensorboardx ffmpeg gdown
+conda install -y -c conda-forge pre-commit easydict tensorboardx ffmpeg gdown types-pyyaml
 conda install -y pytorch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 cudatoolkit=10.1 -c pytorch
 
 
