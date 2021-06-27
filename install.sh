@@ -21,11 +21,11 @@ fi
 DATA_DIR="data/ava/videos"
 
 if [[ ! -d "${DATA_DIR}" ]]; then
-  echo "${DATA_DIR} doesn't exist. Creating it.";
-  mkdir -p ${DATA_DIR}
+    echo "${DATA_DIR} doesn't exist. Creating it.";
+    mkdir -p ${DATA_DIR}
 fi
 
 wget -nc https://s3.amazonaws.com/ava-dataset/annotations/ava_file_names_trainval_v2.1.txt -P data/
 
 awk '{print "https://s3.amazonaws.com/ava-dataset/trainval/" $0}' data/ava_file_names_trainval_v2.1.txt | \
-xargs -n 15 -P 20 wget -q -R "index.html*" -nc -P ${DATA_DIR} https://s3.amazonaws.com/ava-dataset/trainval/
+    xargs -n 15 -P 20 wget -q -R "index.html*" -nc -P ${DATA_DIR} https://s3.amazonaws.com/ava-dataset/trainval/

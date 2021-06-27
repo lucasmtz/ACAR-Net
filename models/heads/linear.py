@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 import torchvision
 
-__all__ = ['linear']
+__all__ = ["linear"]
 
 
 class LinearHead(nn.Module):
-    def __init__(self, width, roi_spatial=7, num_classes=60, dropout=0., bias=False):
-        super(LinearHead, self).__init__()
-        
+    def __init__(self, width, roi_spatial=7, num_classes=60, dropout=0.0, bias=False):
+        super().__init__()
+
         self.roi_spatial = roi_spatial
         self.roi_maxpool = nn.MaxPool2d(roi_spatial)
 
@@ -22,10 +22,10 @@ class LinearHead(nn.Module):
     # data: features, rois
     # returns: outputs
     def forward(self, data):
-        if not isinstance(data['features'], list):
-            features = [data['features']]
+        if not isinstance(data["features"], list):
+            features = [data["features"]]
         else:
-            features = data['features']
+            features = data["features"]
 
         roi_features = []
         for f in features:
@@ -33,7 +33,7 @@ class LinearHead(nn.Module):
             h, w = sp[3:]
             feats = nn.AdaptiveAvgPool3d((1, h, w))(f).view(-1, sp[1], h, w)
 
-            rois = data['rois'].clone()
+            rois = data["rois"].clone()
             rois[:, 1] = rois[:, 1] * w
             rois[:, 2] = rois[:, 2] * h
             rois[:, 3] = rois[:, 3] * w
@@ -49,7 +49,7 @@ class LinearHead(nn.Module):
             roi_features = self.dp(roi_features)
         outputs = self.fc(roi_features)
 
-        return {'outputs': outputs}
+        return {"outputs": outputs}
 
 
 def linear(**kwargs):

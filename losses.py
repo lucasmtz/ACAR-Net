@@ -7,7 +7,7 @@ def ava_pose_softmax_func(logits):
     pose_logits = nn.Softmax(dim=1)(logits[:, :13])
     interact_logits = nn.Sigmoid()(logits[:, 13:])
     logits = torch.cat([pose_logits, interact_logits], dim=1)
-    logits = torch.clamp(logits, min=0., max=1.)
+    logits = torch.clamp(logits, min=0.0, max=1.0)
     return logits
 
 
