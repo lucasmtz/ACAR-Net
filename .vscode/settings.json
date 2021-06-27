@@ -1,0 +1,11 @@
+{
+    "python.pythonPath": "./env/bin/python3.9",
+    "search.exclude": {
+        "**/env/**": true,
+        "**/.git/**": true
+        },
+    "files.watcherExclude": {
+        "**/.git/**": true,
+        "**/env/**": true
+    }
+}

@@ -1,5 +1,6 @@
+black==19.10b0
+flake8==3.9.2
+ipykernel
+numpy
 Pillow>=8.1.1
 PyYAML>=5.4
-easydict
-numpy
-tensorboardX>=2.0
