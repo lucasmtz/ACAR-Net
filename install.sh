@@ -17,7 +17,7 @@ if [[ ! -d "${ANNOT_DIR}" ]]; then
 fi
 
 wget https://storage.googleapis.com/deepmind-media/Datasets/ava_kinetics_v1_0.tar.gz -P ${ANNOT_DIR}
-tar -xzvf ${ANNOT_DIR}/ava_kinetics_v1_0.tar.gz -C ${ANNOT_DIR}
+tar -C ${ANNOT_DIR} -xzvf ${ANNOT_DIR}/ava_kinetics_v1_0.tar.gz
 rm ${ANNOT_DIR}/ava_kinetics_v1_0.tar.gz
 
 gdown --id 1teKrNNnErHPsnORJNJCZaA_U_q0tor93 --output "${ANNOT_DIR}/ava_train_v2.2.pkl"
@@ -65,3 +65,12 @@ wget -nc https://s3.amazonaws.com/kinetics/700_2020/test/k700_2020_test_path.txt
 cat "${DATA_DIR}/k700_2020_train_path.txt" | xargs -n 80 -P 9 wget -q -R "index.html*" -nc -P "${DATA_DIR}/tmp"
 cat "${DATA_DIR}/k700_2020_val_path.txt" | xargs -n 80 -P 9 wget -q -R "index.html*" -nc -P "${DATA_DIR}/tmp"
 cat "${DATA_DIR}/k700_2020_test_path.txt" | xargs -n 6 -P 9 wget -q -R "index.html*" -nc -P "${DATA_DIR}/tmp"
+
+# tar -tvf data/tmp/k700_test_050.tar.gz > test.txt ## save files in tar to list
+# get last column as list and filter this list with files in cat ${ANNOT_DIR}/ava_kinetics_v1_0/kinetics_test_v1.0.csv |  awk -F"," '{print $1}'
+
+# use this final list in --files-from param of tar when extracting
+
+
+# pat_test="$(cat ${ANNOT_DIR}/ava_kinetics_v1_0/kinetics_test_v1.0.csv |  awk -F"," '{print $1 "*"}')"
+# ls ${DATA_DIR}/tmp/*_test_* -1a | xargs -n 1 -P 15 tar -C ${KINETICS_DIR} -xzkf
