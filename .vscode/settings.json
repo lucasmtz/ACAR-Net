@@ -1,5 +1,8 @@
 {
     "python.defaultInterpreterPath": "./env/bin/python3.9",
+    "python.condaPath": "~/anaconda3/bin/conda",
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "python.terminal.activateEnvironment": true,
     "search.exclude": {
         "**/env/**": true,
         "**/.git/**": true
