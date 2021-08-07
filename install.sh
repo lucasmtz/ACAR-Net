@@ -5,11 +5,12 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 SECONDS=0
+conda update -y -n base -c defaults conda
 conda create -y --prefix ./env python=3.9
 conda activate ./env
 conda install -y --file requirements.txt
 conda install -y -c conda-forge pre-commit easydict tensorboardx ffmpeg gdown types-pyyaml
-conda install -y pytorch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 cudatoolkit=10.1 -c pytorch
+conda install -y pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch -c nvidia
 ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 echo '1) Create enviroment time '$ELAPSED >> time_log.txt
 
@@ -77,20 +78,20 @@ echo '5) Extract AVA frames time '$ELAPSED >> time_log.txt
 # Download Kinetics
 # ---------------------------------------------------------------------------------------------------------------------
 
-SECONDS=0
-KINETICS_DIR="${DATA_DIR}/kinetics/videos"
-if [[ ! -d "${KINETICS_DIR}" ]]; then
-    echo "${KINETICS_DIR} doesn't exist. Creating it.";
-    mkdir -p ${KINETICS_DIR}
-fi
-wget -nc https://s3.amazonaws.com/kinetics/700_2020/train/k700_2020_train_path.txt -P ${DATA_DIR}
-wget -nc https://s3.amazonaws.com/kinetics/700_2020/val/k700_2020_val_path.txt -P ${DATA_DIR}
-wget -nc https://s3.amazonaws.com/kinetics/700_2020/test/k700_2020_test_path.txt -P ${DATA_DIR}
-cat "${DATA_DIR}/k700_2020_train_path.txt" | xargs -n 80 -P 9 wget -q --reject-regex "index.html*" -nc -P "${DATA_DIR}/tmp"
-cat "${DATA_DIR}/k700_2020_val_path.txt" | xargs -n 80 -P 9 wget -q --reject-regex "index.html*" -nc -P "${DATA_DIR}/tmp"
-cat "${DATA_DIR}/k700_2020_test_path.txt" | xargs -n 6 -P 9 wget --reject-regex "index.html*" -nc -P "${DATA_DIR}/tmp"
-ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-echo '6) Download Kinetics time '$ELAPSED >> time_log.txt
+# SECONDS=0
+# KINETICS_DIR="${DATA_DIR}/kinetics/videos"
+# if [[ ! -d "${KINETICS_DIR}" ]]; then
+#     echo "${KINETICS_DIR} doesn't exist. Creating it.";
+#     mkdir -p ${KINETICS_DIR}
+# fi
+# wget -nc https://s3.amazonaws.com/kinetics/700_2020/train/k700_2020_train_path.txt -P ${DATA_DIR}
+# wget -nc https://s3.amazonaws.com/kinetics/700_2020/val/k700_2020_val_path.txt -P ${DATA_DIR}
+# wget -nc https://s3.amazonaws.com/kinetics/700_2020/test/k700_2020_test_path.txt -P ${DATA_DIR}
+# cat "${DATA_DIR}/k700_2020_train_path.txt" | xargs -n 80 -P 9 wget -q --reject-regex "index.html*" -nc -P "${DATA_DIR}/tmp"
+# cat "${DATA_DIR}/k700_2020_val_path.txt" | xargs -n 80 -P 9 wget -q --reject-regex "index.html*" -nc -P "${DATA_DIR}/tmp"
+# cat "${DATA_DIR}/k700_2020_test_path.txt" | xargs -n 6 -P 9 wget --reject-regex "index.html*" -nc -P "${DATA_DIR}/tmp"
+# ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+# echo '6) Download Kinetics time '$ELAPSED >> time_log.txt
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Untar Kinetics
