@@ -133,7 +133,15 @@ class SlowFast(nn.Module):
         fast, Tc = self.FastPath(input)
         if self.slow_full_span:
             slow_input = torch.index_select(
-                input, 2, torch.linspace(0, input.shape[2] - 1, input.shape[2] // self.alpha,).long().cuda(),
+                input,
+                2,
+                torch.linspace(
+                    0,
+                    input.shape[2] - 1,
+                    input.shape[2] // self.alpha,
+                )
+                .long()
+                .cuda(),
             )
         else:
             slow_input = input[:, :, :: self.alpha, :, :]
@@ -207,28 +215,24 @@ class SlowFast(nn.Module):
 
 
 def slowfast50(**kwargs):
-    """Constructs a SlowFast-50 model.
-    """
+    """Constructs a SlowFast-50 model."""
     model = SlowFast(Bottleneck, [3, 4, 6, 3], **kwargs)
     return model
 
 
 def slowfast101(**kwargs):
-    """Constructs a SlowFast-101 model.
-    """
+    """Constructs a SlowFast-101 model."""
     model = SlowFast(Bottleneck, [3, 4, 23, 3], **kwargs)
     return model
 
 
 def slowfast152(**kwargs):
-    """Constructs a SlowFast-152 model.
-    """
+    """Constructs a SlowFast-152 model."""
     model = SlowFast(Bottleneck, [3, 8, 36, 3], **kwargs)
     return model
 
 
 def slowfast200(**kwargs):
-    """Constructs a SlowFast-200 model.
-    """
+    """Constructs a SlowFast-200 model."""
     model = SlowFast(Bottleneck, [3, 24, 36, 3], **kwargs)
     return model

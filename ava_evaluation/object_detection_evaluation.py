@@ -367,8 +367,8 @@ class WeightedPascalInstanceSegmentationEvaluator(ObjectDetectionEvaluator):
 class OpenImagesDetectionEvaluator(ObjectDetectionEvaluator):
     """A class to evaluate detections using Open Images V2 metrics.
 
-      Open Images V2 introduce group_of type of bounding boxes and this metric
-      handles those boxes appropriately.
+    Open Images V2 introduce group_of type of bounding boxes and this metric
+    handles those boxes appropriately.
     """
 
     def __init__(self, categories, matching_iou_threshold=0.5, evaluate_corlocs=False):

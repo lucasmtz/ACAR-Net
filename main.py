@@ -364,7 +364,12 @@ def val_epoch(epoch, data_loader, model, criterion, act_func, opt, logger, epoch
             idx_to_class = data_loader.dataset.idx_to_class
             for k in range(num_rois):
                 prefix = "{},{},{:.3f},{:.3f},{:.3f},{:.3f}".format(
-                    fnames[k], mid_times[k], bboxes[k][0], bboxes[k][1], bboxes[k][2], bboxes[k][3],
+                    fnames[k],
+                    mid_times[k],
+                    bboxes[k][0],
+                    bboxes[k][1],
+                    bboxes[k][2],
+                    bboxes[k][3],
                 )
                 for cls in range(outputs.shape[1]):
                     score_str = "%.3f" % outputs[k][cls]

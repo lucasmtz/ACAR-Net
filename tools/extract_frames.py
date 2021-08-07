@@ -1,14 +1,15 @@
 import argparse
 import math
 import multiprocessing
-import shutil
 import os
+import shutil
 
 parser = argparse.ArgumentParser(description="Frame Extraction")
 parser.add_argument("--video_dir", type=str, required=True)
 parser.add_argument("--num_processes", type=int, default=0)
 args = parser.parse_args()
-frame_dir = os.path.join(os.path.dirname(args.video_dir), 'frames')
+frame_dir = os.path.join(os.path.dirname(args.video_dir), "frames")
+
 
 def main(video_file, frame_rate=30, clip_start=900, clip_end=1800):
     video_path = os.path.join(args.video_dir, video_file)
@@ -41,7 +42,7 @@ if __name__ == "__main__":
 
     if not args.num_processes:
         num_processes = multiprocessing.cpu_count()
-    else: 
+    else:
         num_processes = args.num_processes
     with multiprocessing.Pool(num_processes) as p:
         p.map(main, videos)
