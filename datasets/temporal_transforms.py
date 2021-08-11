@@ -12,7 +12,7 @@ Adapted code from:
 import random
 
 
-class TemporalSampling(object):
+class TemporalSampling:
     """Temporally sample the given frame indices with a given stride.
 
     Args:
@@ -30,13 +30,13 @@ class TemporalSampling(object):
             list: Cropped frame indices.
         """
 
-        return frame_indices[::self.step]
+        return frame_indices[:: self.step]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(step={self.step})'.format(self=self)
+        return "{self.__class__.__name__}(step={self.step})".format(self=self)
 
 
-class TemporalCenterCrop(object):
+class TemporalCenterCrop:
     """Temporally crop the given frame indices at the center.
 
     If the number of frames is less than the size,
@@ -70,13 +70,13 @@ class TemporalCenterCrop(object):
                 break
             out.append(index)
 
-        return out[::self.step]
+        return out[:: self.step]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(size={self.size}, step={self.step})'.format(self=self)
+        return "{self.__class__.__name__}(size={self.size}, step={self.step})".format(self=self)
 
 
-class TemporalRandomCrop(object):
+class TemporalRandomCrop:
     """Temporally crop the given frame indices at a random location.
 
     If the number of frames is less than the size,
@@ -110,7 +110,7 @@ class TemporalRandomCrop(object):
                 break
             out.append(index)
 
-        return out[::self.step]
+        return out[:: self.step]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(size={self.size}, step={self.step})'.format(self=self)
+        return "{self.__class__.__name__}(size={self.size}, step={self.step})".format(self=self)

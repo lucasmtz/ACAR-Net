@@ -9,19 +9,21 @@ Adapted code from:
     }.
 """
 
-import random
-import numbers
 import collections
+import numbers
+import random
+
 import numpy as np
 import torch
 from PIL import Image
+
 try:
     import accimage
 except ImportError:
     accimage = None
 
 
-class Compose(object):
+class Compose:
     """Compose several transforms together.
     Args:
         transforms (list of ``Transform`` objects): List of transforms to compose.
@@ -53,19 +55,19 @@ class Compose(object):
         return param_info
 
     def __repr__(self):
-        return self.__class__.__name__ + '(' + repr(self.transforms) + ')'
+        return self.__class__.__name__ + "(" + repr(self.transforms) + ")"
 
 
-class ToTensor(object):
+class ToTensor:
     """Convert a ``PIL.Image`` or ``numpy.ndarray`` to tensor.
     Convert a PIL.Image or numpy.ndarray (H x W x C) in the range
-    [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range 
+    [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range
     [0.0, 255.0 / norm_value].
     Args:
         norm_value (float, optional): Normalization constant.
     """
 
-    def __init__(self, norm_value=255.):
+    def __init__(self, norm_value=255.0):
         self.norm_value = norm_value
 
     def __call__(self, pic):
@@ -82,22 +84,21 @@ class ToTensor(object):
             return img.float().div(self.norm_value)
 
         if accimage is not None and isinstance(pic, accimage.Image):
-            nppic = np.zeros(
-                [pic.channels, pic.height, pic.width], dtype=np.float32)
+            nppic = np.zeros([pic.channels, pic.height, pic.width], dtype=np.float32)
             pic.copyto(nppic)
             return torch.from_numpy(nppic)
 
         # handle PIL Image
-        if pic.mode == 'I':
+        if pic.mode == "I":
             img = torch.from_numpy(np.array(pic, np.int32, copy=False))
-        elif pic.mode == 'I;16':
+        elif pic.mode == "I;16":
             img = torch.from_numpy(np.array(pic, np.int16, copy=False))
         else:
             img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))
         # PIL image mode: 1, L, P, I, F, RGB, YCbCr, RGBA, CMYK
-        if pic.mode == 'YCbCr':
+        if pic.mode == "YCbCr":
             nchannel = 3
-        elif pic.mode == 'I;16':
+        elif pic.mode == "I;16":
             nchannel = 1
         else:
             nchannel = len(pic.mode)
@@ -114,10 +115,10 @@ class ToTensor(object):
         return [None]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(norm_value={self.norm_value})'.format(self=self)
+        return "{self.__class__.__name__}(norm_value={self.norm_value})".format(self=self)
 
 
-class Normalize(object):
+class Normalize:
     """Normalize an tensor image with mean and standard deviation.
     Given mean: (R, G, B) and std: (R, G, B),
     will normalize each channel of the torch.*Tensor, i.e.
@@ -147,10 +148,10 @@ class Normalize(object):
         return [None]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(mean={self.mean}, std={self.std})'.format(self=self)
+        return "{self.__class__.__name__}(mean={self.mean}, std={self.std})".format(self=self)
 
 
-class Scale(object):
+class Scale:
     """Rescale the input PIL.Image to the given size.
     Args:
         resize (sequence or int): Desired output size. If size is a sequence like
@@ -165,9 +166,7 @@ class Scale(object):
     """
 
     def __init__(self, resize, interpolation=Image.BILINEAR, max_ratio=None):
-        assert isinstance(resize,
-                          int) or (isinstance(resize, collections.Iterable) and
-                                   len(resize) == 2)
+        assert isinstance(resize, int) or (isinstance(resize, collections.Iterable) and len(resize) == 2)
         self.resize = resize
         self.interpolation = interpolation
         self.max_ratio = max_ratio
@@ -209,13 +208,14 @@ class Scale(object):
         else:
             resize = self.resize
         self.size = resize
-        return [{'transform': 'Scale', 'size': self.size}]
+        return [{"transform": "Scale", "size": self.size}]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(resize={self.resize}, interpolation={self.interpolation}, max_ratio={self.max_ratio})'.format(self=self)
+        return f"{self.__class__.__name__}(resize={self.resize}, \
+            interpolation={self.interpolation}, max_ratio={self.max_ratio})"
 
 
-class CenterCrop(object):
+class CenterCrop:
     """Crop the given PIL.Image at the center.
     Args:
         size (sequence or int): Desired output size of the crop. If size is an
@@ -238,22 +238,22 @@ class CenterCrop(object):
         """
         w, h = img.size
         th, tw = self.size
-        x1 = int(round((w - tw) / 2.))
-        y1 = int(round((h - th) / 2.))
+        x1 = int(round((w - tw) / 2.0))
+        y1 = int(round((h - th) / 2.0))
         return img.crop((x1, y1, x1 + tw, y1 + th))
 
     def randomize_parameters(self):
-        return [{'transform': 'CenterCrop', 'size': self.size}]
+        return [{"transform": "CenterCrop", "size": self.size}]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(size={self.size})'.format(self=self)
-        
+        return "{self.__class__.__name__}(size={self.size})".format(self=self)
 
-class CornerCrop(object):
+
+class CornerCrop:
     """Crop the given PIL.Image at some corner or the center.
     Args:
         size (int): Desired output size of the square crop.
-        crop_position (str, optional): Designate the position to be cropped. 
+        crop_position (str, optional): Designate the position to be cropped.
             If is None, a random position will be selected from five choices.
     """
 
@@ -270,34 +270,34 @@ class CornerCrop(object):
         else:
             self.randomize = False
         self.crop_position = crop_position
-        self.crop_positions = ['c', 'tl', 'tr', 'bl', 'br']
+        self.crop_positions = ["c", "tl", "tr", "bl", "br"]
 
     def __call__(self, img):
         image_width = img.size[0]
         image_height = img.size[1]
 
-        if self.crop_position == 'c':
+        if self.crop_position == "c":
             th, tw = (self.size, self.size)
-            x1 = int(round((image_width - tw) / 2.))
-            y1 = int(round((image_height - th) / 2.))
+            x1 = int(round((image_width - tw) / 2.0))
+            y1 = int(round((image_height - th) / 2.0))
             x2 = x1 + tw
             y2 = y1 + th
-        elif self.crop_position == 'tl':
+        elif self.crop_position == "tl":
             x1 = 0
             y1 = 0
             x2 = self.size
             y2 = self.size
-        elif self.crop_position == 'tr':
+        elif self.crop_position == "tr":
             x1 = image_width - self.size
             y1 = 0
             x2 = image_width
             y2 = self.size
-        elif self.crop_position == 'bl':
+        elif self.crop_position == "bl":
             x1 = 0
             y1 = image_height - self.size
             x2 = self.size
             y2 = image_height
-        elif self.crop_position == 'br':
+        elif self.crop_position == "br":
             x1 = image_width - self.size
             y1 = image_height - self.size
             x2 = image_width
@@ -309,17 +309,14 @@ class CornerCrop(object):
 
     def randomize_parameters(self, param=None):
         if self.randomize:
-            self.crop_position = self.crop_positions[random.randint(
-                0,
-                len(self.crop_positions) - 1)]
-        return [{'transform': 'CornerCrop', 'crop_position': self.crop_position,
-                 'size': self.size}]
+            self.crop_position = self.crop_positions[random.randint(0, len(self.crop_positions) - 1)]
+        return [{"transform": "CornerCrop", "crop_position": self.crop_position, "size": self.size}]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(size={self.size}, crop_position={self.crop_position})'.format(self=self)
+        return "{self.__class__.__name__}(size={self.size}, crop_position={self.crop_position})".format(self=self)
 
 
-class RandomHorizontalFlip(object):
+class RandomHorizontalFlip:
     """Horizontally flip the given PIL.Image randomly with a given probability.
     Args:
         p (float, optional): Probability of flipping.
@@ -345,13 +342,13 @@ class RandomHorizontalFlip(object):
             self.flip = True
         else:
             self.flip = False
-        return [{'transform': 'RandomHorizontalFlip', 'flip': self.flip}]
+        return [{"transform": "RandomHorizontalFlip", "flip": self.flip}]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(prob={self.prob})'.format(self=self)
+        return "{self.__class__.__name__}(prob={self.prob})".format(self=self)
 
-        
-class ScaleJitteringRandomCrop(object):
+
+class ScaleJitteringRandomCrop:
     """Randomly rescale the given PIL.Image and then take a random crop.
     Args:
         min_scale (int): Minimum scale for random rescaling.
@@ -392,8 +389,16 @@ class ScaleJitteringRandomCrop(object):
         self.scale = random.randint(self.min_scale, self.max_scale)
         self.tl_x = random.random()
         self.tl_y = random.random()
-        return [{'transform': 'ScaleJitteringRandomCrop', 'pos_x': self.tl_x,
-                 'pos_y': self.tl_y, 'scale': self.scale, 'size': self.size}]
+        return [
+            {
+                "transform": "ScaleJitteringRandomCrop",
+                "pos_x": self.tl_x,
+                "pos_y": self.tl_y,
+                "scale": self.scale,
+                "size": self.size,
+            }
+        ]
 
     def __repr__(self):
-        return '{self.__class__.__name__}(min_scale={self.min_scale}, max_scale={self.max_scale}, size={self.size}, interpolation={self.interpolation})'.format(self=self)
+        return f"{self.__class__.__name__}(min_scale={self.min_scale}, \
+            max_scale={self.max_scale}, size={self.size}, interpolation={self.interpolation})"

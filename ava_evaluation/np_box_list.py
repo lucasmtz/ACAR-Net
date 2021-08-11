@@ -18,7 +18,7 @@
 import numpy as np
 
 
-class BoxList(object):
+class BoxList:
     """Box collection.
 
     BoxList represents a list of bounding boxes as numpy array, where each
@@ -41,23 +41,22 @@ class BoxList(object):
           ValueError: if invalid dimensions for bbox data
         """
         if not isinstance(data, np.ndarray):
-            raise ValueError('data must be a numpy array.')
+            raise ValueError("data must be a numpy array.")
         if len(data.shape) != 2 or data.shape[1] != 4:
-            raise ValueError('Invalid dimensions for box data.')
+            raise ValueError("Invalid dimensions for box data.")
         if data.dtype != np.float32 and data.dtype != np.float64:
-            raise ValueError('Invalid data type for box data: float is required.')
+            raise ValueError("Invalid data type for box data: float is required.")
         if not self._is_valid_boxes(data):
-            raise ValueError('Invalid box data. data must be a numpy array of '
-                             'N*[y_min, x_min, y_max, x_max]')
-        self.data = {'boxes': data}
+            raise ValueError("Invalid box data. data must be a numpy array of " "N*[y_min, x_min, y_max, x_max]")
+        self.data = {"boxes": data}
 
     def num_boxes(self):
         """Return number of boxes held in collections."""
-        return self.data['boxes'].shape[0]
+        return self.data["boxes"].shape[0]
 
     def get_extra_fields(self):
         """Return all non-box fields."""
-        return [k for k in self.data.keys() if k != 'boxes']
+        return [k for k in self.data.keys() if k != "boxes"]
 
     def has_field(self, field):
         return field in self.data
@@ -74,9 +73,9 @@ class BoxList(object):
               data does not matches the number of boxes.
         """
         if self.has_field(field):
-            raise ValueError('Field ' + field + 'already exists')
+            raise ValueError("Field " + field + "already exists")
         if len(field_data.shape) < 1 or field_data.shape[0] != self.num_boxes():
-            raise ValueError('Invalid dimensions for field data')
+            raise ValueError("Invalid dimensions for field data")
         self.data[field] = field_data
 
     def get(self):
@@ -85,7 +84,7 @@ class BoxList(object):
         Returns:
           a numpy array of shape [N, 4] representing box corners
         """
-        return self.get_field('boxes')
+        return self.get_field("boxes")
 
     def get_field(self, field):
         """Accesses data associated with the specified field in the box collection.
@@ -100,7 +99,7 @@ class BoxList(object):
           ValueError: if invalid field
         """
         if not self.has_field(field):
-            raise ValueError('field {} does not exist'.format(field))
+            raise ValueError(f"field {field} does not exist")
         return self.data[field]
 
     def get_coordinates(self):

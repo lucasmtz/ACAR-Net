@@ -1,0 +1,5 @@
+1) Create enviroment time Elapsed: 0hrs 4min 47sec
+2) Download annotations time Elapsed: 0hrs 0min 18sec
+3) Download pre-trained model time Elapsed: 0hrs 0min 0sec
+4) Download AVA time Elapsed: 2hrs 1min 8sec
+5) Extract AVA frames time Elapsed: 4hrs 10min 2sec

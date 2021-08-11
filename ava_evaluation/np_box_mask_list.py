@@ -16,6 +16,7 @@
 """Numpy BoxMaskList classes and functions."""
 
 import numpy as np
+
 from . import np_box_list
 
 
@@ -42,16 +43,16 @@ class BoxMaskList(np_box_list.BoxList):
           ValueError: if mask data is not a numpy array
           ValueError: if invalid dimension for mask data
         """
-        super(BoxMaskList, self).__init__(box_data)
+        super().__init__(box_data)
         if not isinstance(mask_data, np.ndarray):
-            raise ValueError('Mask data must be a numpy array.')
+            raise ValueError("Mask data must be a numpy array.")
         if len(mask_data.shape) != 3:
-            raise ValueError('Invalid dimensions for mask data.')
+            raise ValueError("Invalid dimensions for mask data.")
         if mask_data.dtype != np.uint8:
-            raise ValueError('Invalid data type for mask data: uint8 is required.')
+            raise ValueError("Invalid data type for mask data: uint8 is required.")
         if mask_data.shape[0] != box_data.shape[0]:
-            raise ValueError('There should be the same number of boxes and masks.')
-        self.data['masks'] = mask_data
+            raise ValueError("There should be the same number of boxes and masks.")
+        self.data["masks"] = mask_data
 
     def get_masks(self):
         """Convenience function for accessing masks.
@@ -59,4 +60,4 @@ class BoxMaskList(np_box_list.BoxList):
         Returns:
           a numpy array of shape [N, height, width] representing masks
         """
-        return self.get_field('masks')
+        return self.get_field("masks")

@@ -21,17 +21,17 @@ Example box operations that are supported:
 """
 import numpy as np
 
-from . import np_box_list
-from . import np_box_ops
+from . import np_box_list, np_box_ops
 
 
-class SortOrder(object):
+class SortOrder:
     """Enum class for sort order.
 
     Attributes:
       ascend: ascend order.
       descend: descend order.
     """
+
     ASCEND = 1
     DESCEND = 2
 
@@ -117,7 +117,7 @@ def gather(boxlist, indices, fields=None):
     """
     if indices.size:
         if np.amax(indices) >= boxlist.num_boxes() or np.amin(indices) < 0:
-            raise ValueError('indices are out of valid range.')
+            raise ValueError("indices are out of valid range.")
     subboxlist = np_box_list.BoxList(boxlist.get()[indices, :])
     if fields is None:
         fields = boxlist.get_extra_fields()
@@ -145,11 +145,11 @@ def sort_by_field(boxlist, field, order=SortOrder.DESCEND):
       ValueError: if the order is not either descend or ascend.
     """
     if not boxlist.has_field(field):
-        raise ValueError('Field ' + field + ' does not exist')
+        raise ValueError("Field " + field + " does not exist")
     if len(boxlist.get_field(field).shape) != 1:
-        raise ValueError('Field ' + field + 'should be single dimension.')
+        raise ValueError("Field " + field + "should be single dimension.")
     if order != SortOrder.DESCEND and order != SortOrder.ASCEND:
-        raise ValueError('Invalid sort order')
+        raise ValueError("Invalid sort order")
 
     field_to_sort = boxlist.get_field(field)
     sorted_indices = np.argsort(field_to_sort)
@@ -158,10 +158,7 @@ def sort_by_field(boxlist, field, order=SortOrder.DESCEND):
     return gather(boxlist, sorted_indices)
 
 
-def non_max_suppression(boxlist,
-                        max_output_size=10000,
-                        iou_threshold=1.0,
-                        score_threshold=-10.0):
+def non_max_suppression(boxlist, max_output_size=10000, iou_threshold=1.0, score_threshold=-10.0):
     """Non maximum suppression.
 
     This op greedily selects a subset of detection bounding boxes, pruning
@@ -186,18 +183,18 @@ def non_max_suppression(boxlist,
       ValueError: if threshold is not in [0, 1]
       ValueError: if max_output_size < 0
     """
-    if not boxlist.has_field('scores'):
-        raise ValueError('Field scores does not exist')
-    if iou_threshold < 0. or iou_threshold > 1.0:
-        raise ValueError('IOU threshold must be in [0, 1]')
+    if not boxlist.has_field("scores"):
+        raise ValueError("Field scores does not exist")
+    if iou_threshold < 0.0 or iou_threshold > 1.0:
+        raise ValueError("IOU threshold must be in [0, 1]")
     if max_output_size < 0:
-        raise ValueError('max_output_size must be bigger than 0.')
+        raise ValueError("max_output_size must be bigger than 0.")
 
     boxlist = filter_scores_greater_than(boxlist, score_threshold)
     if boxlist.num_boxes() == 0:
         return boxlist
 
-    boxlist = sort_by_field(boxlist, 'scores')
+    boxlist = sort_by_field(boxlist, "scores")
 
     # Prevent further computation if NMS is disabled.
     if iou_threshold == 1.0:
@@ -223,17 +220,15 @@ def non_max_suppression(boxlist,
                 if valid_indices.size == 0:
                     break
 
-                intersect_over_union = np_box_ops.iou(
-                    np.expand_dims(boxes[i, :], axis=0), boxes[valid_indices, :])
+                intersect_over_union = np_box_ops.iou(np.expand_dims(boxes[i, :], axis=0), boxes[valid_indices, :])
                 intersect_over_union = np.squeeze(intersect_over_union, axis=0)
                 is_index_valid[valid_indices] = np.logical_and(
-                    is_index_valid[valid_indices],
-                    intersect_over_union <= iou_threshold)
+                    is_index_valid[valid_indices], intersect_over_union <= iou_threshold
+                )
     return gather(boxlist, np.array(selected_indices))
 
 
-def multi_class_non_max_suppression(boxlist, score_thresh, iou_thresh,
-                                    max_output_size):
+def multi_class_non_max_suppression(boxlist, score_thresh, iou_thresh, max_output_size):
     """Multi-class version of non maximum suppression.
 
     This op greedily selects a subset of detection bounding boxes, pruning
@@ -265,43 +260,39 @@ def multi_class_non_max_suppression(boxlist, score_thresh, iou_thresh,
         a valid scores field.
     """
     if not 0 <= iou_thresh <= 1.0:
-        raise ValueError('thresh must be between 0 and 1')
+        raise ValueError("thresh must be between 0 and 1")
     if not isinstance(boxlist, np_box_list.BoxList):
-        raise ValueError('boxlist must be a BoxList')
-    if not boxlist.has_field('scores'):
-        raise ValueError('input boxlist must have \'scores\' field')
-    scores = boxlist.get_field('scores')
+        raise ValueError("boxlist must be a BoxList")
+    if not boxlist.has_field("scores"):
+        raise ValueError("input boxlist must have 'scores' field")
+    scores = boxlist.get_field("scores")
     if len(scores.shape) == 1:
         scores = np.reshape(scores, [-1, 1])
     elif len(scores.shape) == 2:
         if scores.shape[1] is None:
-            raise ValueError('scores field must have statically defined second '
-                             'dimension')
+            raise ValueError("scores field must have statically defined second " "dimension")
     else:
-        raise ValueError('scores field must be of rank 1 or 2')
+        raise ValueError("scores field must be of rank 1 or 2")
     num_boxes = boxlist.num_boxes()
     num_scores = scores.shape[0]
     num_classes = scores.shape[1]
 
     if num_boxes != num_scores:
-        raise ValueError('Incorrect scores field length: actual vs expected.')
+        raise ValueError("Incorrect scores field length: actual vs expected.")
 
     selected_boxes_list = []
     for class_idx in range(num_classes):
         boxlist_and_class_scores = np_box_list.BoxList(boxlist.get())
         class_scores = np.reshape(scores[0:num_scores, class_idx], [-1])
-        boxlist_and_class_scores.add_field('scores', class_scores)
-        boxlist_filt = filter_scores_greater_than(boxlist_and_class_scores,
-                                                  score_thresh)
-        nms_result = non_max_suppression(boxlist_filt,
-                                         max_output_size=max_output_size,
-                                         iou_threshold=iou_thresh,
-                                         score_threshold=score_thresh)
-        nms_result.add_field(
-            'classes', np.zeros_like(nms_result.get_field('scores')) + class_idx)
+        boxlist_and_class_scores.add_field("scores", class_scores)
+        boxlist_filt = filter_scores_greater_than(boxlist_and_class_scores, score_thresh)
+        nms_result = non_max_suppression(
+            boxlist_filt, max_output_size=max_output_size, iou_threshold=iou_thresh, score_threshold=score_thresh
+        )
+        nms_result.add_field("classes", np.zeros_like(nms_result.get_field("scores")) + class_idx)
         selected_boxes_list.append(nms_result)
     selected_boxes = concatenate(selected_boxes_list)
-    sorted_boxes = sort_by_field(selected_boxes, 'scores')
+    sorted_boxes = sort_by_field(selected_boxes, "scores")
     return sorted_boxes
 
 
@@ -356,12 +347,10 @@ def clip_to_window(boxlist, window):
     y_max_clipped = np.fmax(np.fmin(y_max, win_y_max), win_y_min)
     x_min_clipped = np.fmax(np.fmin(x_min, win_x_max), win_x_min)
     x_max_clipped = np.fmax(np.fmin(x_max, win_x_max), win_x_min)
-    clipped = np_box_list.BoxList(
-        np.hstack([y_min_clipped, x_min_clipped, y_max_clipped, x_max_clipped]))
+    clipped = np_box_list.BoxList(np.hstack([y_min_clipped, x_min_clipped, y_max_clipped, x_max_clipped]))
     clipped = _copy_extra_fields(clipped, boxlist)
     areas = area(clipped)
-    nonzero_area_indices = np.reshape(np.nonzero(np.greater(areas, 0.0)),
-                                      [-1]).astype(np.int32)
+    nonzero_area_indices = np.reshape(np.nonzero(np.greater(areas, 0.0)), [-1]).astype(np.int32)
     return gather(clipped, nonzero_area_indices)
 
 
@@ -412,12 +401,15 @@ def prune_outside_window(boxlist, window):
     win_x_min = window[1]
     win_y_max = window[2]
     win_x_max = window[3]
-    coordinate_violations = np.hstack([np.less(y_min, win_y_min),
-                                       np.less(x_min, win_x_min),
-                                       np.greater(y_max, win_y_max),
-                                       np.greater(x_max, win_x_max)])
-    valid_indices = np.reshape(
-        np.where(np.logical_not(np.max(coordinate_violations, axis=1))), [-1])
+    coordinate_violations = np.hstack(
+        [
+            np.less(y_min, win_y_min),
+            np.less(x_min, win_x_min),
+            np.greater(y_max, win_y_max),
+            np.greater(x_max, win_x_max),
+        ]
+    )
+    valid_indices = np.reshape(np.where(np.logical_not(np.max(coordinate_violations, axis=1))), [-1])
     return gather(boxlist, valid_indices), valid_indices
 
 
@@ -443,14 +435,13 @@ def concatenate(boxlists, fields=None):
         all boxlists
     """
     if not isinstance(boxlists, list):
-        raise ValueError('boxlists should be a list')
+        raise ValueError("boxlists should be a list")
     if not boxlists:
-        raise ValueError('boxlists should have nonzero length')
+        raise ValueError("boxlists should have nonzero length")
     for boxlist in boxlists:
         if not isinstance(boxlist, np_box_list.BoxList):
-            raise ValueError('all elements of boxlists should be BoxList objects')
-    concatenated = np_box_list.BoxList(
-        np.vstack([boxlist.get() for boxlist in boxlists]))
+            raise ValueError("all elements of boxlists should be BoxList objects")
+    concatenated = np_box_list.BoxList(np.vstack([boxlist.get() for boxlist in boxlists]))
     if fields is None:
         fields = boxlists[0].get_extra_fields()
     for field in fields:
@@ -458,14 +449,14 @@ def concatenate(boxlists, fields=None):
         first_field_shape = first_field_shape[1:]
         for boxlist in boxlists:
             if not boxlist.has_field(field):
-                raise ValueError('boxlist must contain all requested fields')
+                raise ValueError("boxlist must contain all requested fields")
             field_shape = boxlist.get_field(field).shape
             field_shape = field_shape[1:]
             if field_shape != first_field_shape:
-                raise ValueError('field %s must have same shape for all boxlists '
-                                 'except for the 0th dimension.' % field)
-        concatenated_field = np.concatenate(
-            [boxlist.get_field(field) for boxlist in boxlists], axis=0)
+                raise ValueError(
+                    "field %s must have same shape for all boxlists " "except for the 0th dimension." % field
+                )
+        concatenated_field = np.concatenate([boxlist.get_field(field) for boxlist in boxlists], axis=0)
         concatenated.add_field(field, concatenated_field)
     return concatenated
 
@@ -489,17 +480,15 @@ def filter_scores_greater_than(boxlist, thresh):
         have a scores field
     """
     if not isinstance(boxlist, np_box_list.BoxList):
-        raise ValueError('boxlist must be a BoxList')
-    if not boxlist.has_field('scores'):
-        raise ValueError('input boxlist must have \'scores\' field')
-    scores = boxlist.get_field('scores')
+        raise ValueError("boxlist must be a BoxList")
+    if not boxlist.has_field("scores"):
+        raise ValueError("input boxlist must have 'scores' field")
+    scores = boxlist.get_field("scores")
     if len(scores.shape) > 2:
-        raise ValueError('Scores should have rank 1 or 2')
+        raise ValueError("Scores should have rank 1 or 2")
     if len(scores.shape) == 2 and scores.shape[1] != 1:
-        raise ValueError('Scores should have rank 1 or have shape '
-                         'consistent with [None, 1]')
-    high_score_indices = np.reshape(np.where(np.greater(scores, thresh)),
-                                    [-1]).astype(np.int32)
+        raise ValueError("Scores should have rank 1 or have shape " "consistent with [None, 1]")
+    high_score_indices = np.reshape(np.where(np.greater(scores, thresh)), [-1]).astype(np.int32)
     return gather(boxlist, high_score_indices)
 
 
@@ -525,9 +514,10 @@ def change_coordinate_frame(boxlist, window):
     win_height = window[2] - window[0]
     win_width = window[3] - window[1]
     boxlist_new = scale(
-        np_box_list.BoxList(boxlist.get() -
-                            [window[0], window[1], window[0], window[1]]),
-        1.0 / win_height, 1.0 / win_width)
+        np_box_list.BoxList(boxlist.get() - [window[0], window[1], window[0], window[1]]),
+        1.0 / win_height,
+        1.0 / win_width,
+    )
     _copy_extra_fields(boxlist_new, boxlist)
 
     return boxlist_new
@@ -548,7 +538,6 @@ def _copy_extra_fields(boxlist_to_copy_to, boxlist_to_copy_from):
     return boxlist_to_copy_to
 
 
-def _update_valid_indices_by_removing_high_iou_boxes(
-        selected_indices, is_index_valid, intersect_over_union, threshold):
+def _update_valid_indices_by_removing_high_iou_boxes(selected_indices, is_index_valid, intersect_over_union, threshold):
     max_iou = np.max(intersect_over_union[:, selected_indices], axis=1)
     return np.logical_and(is_index_valid, max_iou <= threshold)

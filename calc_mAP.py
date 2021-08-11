@@ -11,17 +11,15 @@ python -O calc_mAP.py \
   -d your_results.csv
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import argparse
-from collections import defaultdict
 import csv
 import heapq
 import logging
 import pprint
 import time
+from collections import defaultdict
+
 import numpy as np
 
 from ava_evaluation import object_detection_evaluation, standard_fields
@@ -66,7 +64,7 @@ def read_csv(csv_file, class_whitelist=None, capacity=0):
     for row in reader:
         assert len(row) in [7, 8], "Wrong number of columns: " + row
         image_key = make_image_key(row[0], row[1])
-        x1, y1, x2, y2 = [float(n) for n in row[2:6]]
+        x1, y1, x2, y2 = (float(n) for n in row[2:6])
         action_id = int(row[6])
         if class_whitelist and action_id not in class_whitelist:
             continue
@@ -74,11 +72,9 @@ def read_csv(csv_file, class_whitelist=None, capacity=0):
         if len(row) == 8:
             score = float(row[7])
         if capacity < 1 or len(entries[image_key]) < capacity:
-            heapq.heappush(entries[image_key],
-                           (score, action_id, y1, x1, y2, x2))
+            heapq.heappush(entries[image_key], (score, action_id, y1, x1, y2, x2))
         elif score > entries[image_key][0][0]:
-            heapq.heapreplace(entries[image_key],
-                              (score, action_id, y1, x1, y2, x2))
+            heapq.heapreplace(entries[image_key], (score, action_id, y1, x1, y2, x2))
     for image_key in entries:
         # Evaluation API assumes boxes with descending scores
         entry = sorted(entries[image_key], key=lambda tup: -tup[0])
@@ -145,30 +141,26 @@ def run_evaluation(labelmap, groundtruth, detections, exclusions, logger):
       exclusions: file object or None.
     """
     categories, class_whitelist = read_labelmap(labelmap)
-    logger.info("CATEGORIES (%d):\n%s", len(categories),
-                 pprint.pformat(categories, indent=2))
+    logger.info("CATEGORIES (%d):\n%s", len(categories), pprint.pformat(categories, indent=2))
     excluded_keys = read_exclusions(exclusions)
 
-    pascal_evaluator = object_detection_evaluation.PascalDetectionEvaluator(
-        categories)
+    pascal_evaluator = object_detection_evaluation.PascalDetectionEvaluator(categories)
 
     # Reads the ground truth data.
     boxes, labels, _ = read_csv(groundtruth, class_whitelist, 0)
     start = time.time()
     for image_key in boxes:
         if image_key in excluded_keys:
-            logger.info(("Found excluded timestamp in ground truth: %s. "
-                          "It will be ignored."), image_key)
+            logger.info(("Found excluded timestamp in ground truth: %s. " "It will be ignored."), image_key)
             continue
         pascal_evaluator.add_single_ground_truth_image_info(
-            image_key, {
-                standard_fields.InputDataFields.groundtruth_boxes:
-                    np.array(boxes[image_key], dtype=float),
-                standard_fields.InputDataFields.groundtruth_classes:
-                    np.array(labels[image_key], dtype=int),
-                standard_fields.InputDataFields.groundtruth_difficult:
-                    np.zeros(len(boxes[image_key]), dtype=bool)
-            })
+            image_key,
+            {
+                standard_fields.InputDataFields.groundtruth_boxes: np.array(boxes[image_key], dtype=float),
+                standard_fields.InputDataFields.groundtruth_classes: np.array(labels[image_key], dtype=int),
+                standard_fields.InputDataFields.groundtruth_difficult: np.zeros(len(boxes[image_key]), dtype=bool),
+            },
+        )
     print_time("convert groundtruth", start)
 
     # Reads detections data.
@@ -176,18 +168,16 @@ def run_evaluation(labelmap, groundtruth, detections, exclusions, logger):
     start = time.time()
     for image_key in boxes:
         if image_key in excluded_keys:
-            logger.info(("Found excluded timestamp in detections: %s. "
-                          "It will be ignored."), image_key)
+            logger.info(("Found excluded timestamp in detections: %s. " "It will be ignored."), image_key)
             continue
         pascal_evaluator.add_single_detected_image_info(
-            image_key, {
-                standard_fields.DetectionResultFields.detection_boxes:
-                    np.array(boxes[image_key], dtype=float),
-                standard_fields.DetectionResultFields.detection_classes:
-                    np.array(labels[image_key], dtype=int),
-                standard_fields.DetectionResultFields.detection_scores:
-                    np.array(scores[image_key], dtype=float)
-            })
+            image_key,
+            {
+                standard_fields.DetectionResultFields.detection_boxes: np.array(boxes[image_key], dtype=float),
+                standard_fields.DetectionResultFields.detection_classes: np.array(labels[image_key], dtype=int),
+                standard_fields.DetectionResultFields.detection_scores: np.array(scores[image_key], dtype=float),
+            },
+        )
     print_time("convert detections", start)
 
     start = time.time()
@@ -211,26 +201,25 @@ def parse_arguments():
         "--labelmap",
         help="Filename of label map",
         type=argparse.FileType("r"),
-        default="ava/ava_action_list_v2.2_for_activitynet_2019.pbtxt")
+        default="ava/ava_action_list_v2.2_for_activitynet_2019.pbtxt",
+    )
     parser.add_argument(
-        "-g",
-        "--groundtruth",
-        help="CSV file containing ground truth.",
-        type=argparse.FileType("r"),
-        required=True)
+        "-g", "--groundtruth", help="CSV file containing ground truth.", type=argparse.FileType("r"), required=True
+    )
     parser.add_argument(
         "-d",
         "--detections",
         help="CSV file containing inferred action detections.",
         type=argparse.FileType("r"),
-        required=True)
+        required=True,
+    )
     parser.add_argument(
         "-e",
         "--exclusions",
-        help=("Optional CSV file containing videoid,timestamp pairs to exclude "
-              "from evaluation."),
+        help=("Optional CSV file containing videoid,timestamp pairs to exclude " "from evaluation."),
         type=argparse.FileType("r"),
-        required=False)
+        required=False,
+    )
     return parser.parse_args()
 
 

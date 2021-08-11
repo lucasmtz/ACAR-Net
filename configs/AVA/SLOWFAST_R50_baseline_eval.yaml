@@ -1,6 +1,6 @@
-evaluate: false
+evaluate: true
 
-result_path: experiments/AVA/SLOWFAST_R50_ACAR_HR2O
+result_path: experiments/AVA/SLOWFAST_R50_baseline
 manual_seed: 1
 print_freq: 20
 
@@ -26,12 +26,11 @@ model:
       num_classes: 60
       multi_class: true
   head:
-    type: acar
+    type: linear
     kwargs:
       width: 2304
       roi_spatial: 7
       num_classes: 60
-      depth: 2
 
 loss:
   type: ava_criterion

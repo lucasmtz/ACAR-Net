@@ -38,7 +38,7 @@ def area(masks):
       ValueError: If masks.dtype is not np.uint8
     """
     if masks.dtype != np.uint8:
-        raise ValueError('Masks type should be np.uint8')
+        raise ValueError("Masks type should be np.uint8")
     return np.sum(masks, axis=(1, 2), dtype=np.float32)
 
 
@@ -58,7 +58,7 @@ def intersection(masks1, masks2):
       ValueError: If masks1 and masks2 are not of type np.uint8.
     """
     if masks1.dtype != np.uint8 or masks2.dtype != np.uint8:
-        raise ValueError('masks1 and masks2 should be of type np.uint8')
+        raise ValueError("masks1 and masks2 should be of type np.uint8")
     n = masks1.shape[0]
     m = masks2.shape[0]
     answer = np.zeros([n, m], dtype=np.float32)
@@ -84,12 +84,11 @@ def iou(masks1, masks2):
       ValueError: If masks1 and masks2 are not of type np.uint8.
     """
     if masks1.dtype != np.uint8 or masks2.dtype != np.uint8:
-        raise ValueError('masks1 and masks2 should be of type np.uint8')
+        raise ValueError("masks1 and masks2 should be of type np.uint8")
     intersect = intersection(masks1, masks2)
     area1 = area(masks1)
     area2 = area(masks2)
-    union = np.expand_dims(area1, axis=1) + np.expand_dims(
-        area2, axis=0) - intersect
+    union = np.expand_dims(area1, axis=1) + np.expand_dims(area2, axis=0) - intersect
     return intersect / np.maximum(union, EPSILON)
 
 
@@ -113,7 +112,7 @@ def ioa(masks1, masks2):
       ValueError: If masks1 and masks2 are not of type np.uint8.
     """
     if masks1.dtype != np.uint8 or masks2.dtype != np.uint8:
-        raise ValueError('masks1 and masks2 should be of type np.uint8')
+        raise ValueError("masks1 and masks2 should be of type np.uint8")
     intersect = intersection(masks1, masks2)
     areas = np.expand_dims(area(masks2), axis=0)
     return intersect / (areas + EPSILON)

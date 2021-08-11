@@ -9,14 +9,14 @@ import torch.nn as nn
 
 BN = nn.BatchNorm3d
 
-__all__ = ['slowfast50', 'slowfast101', 'slowfast152', 'slowfast200']
+__all__ = ["slowfast50", "slowfast101", "slowfast152", "slowfast200"]
 
 
 class Bottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, dilation=1, head_conv=1):
-        super(Bottleneck, self).__init__()
+        super().__init__()
         if head_conv == 1:
             self.conv1 = nn.Conv3d(inplanes, planes, kernel_size=1, bias=False)
             self.bn1 = BN(planes)
@@ -26,8 +26,14 @@ class Bottleneck(nn.Module):
         else:
             raise ValueError("Unsupported head_conv!")
         self.conv2 = nn.Conv3d(
-            planes, planes, kernel_size=(1, 3, 3), stride=(1, stride, stride), 
-            padding=(0, dilation, dilation), dilation=(1, dilation, dilation), bias=False)
+            planes,
+            planes,
+            kernel_size=(1, 3, 3),
+            stride=(1, stride, stride),
+            padding=(0, dilation, dilation),
+            dilation=(1, dilation, dilation),
+            bias=False,
+        )
         self.bn2 = BN(planes)
         self.conv3 = nn.Conv3d(planes, planes * 4, kernel_size=1, bias=False)
         self.bn3 = BN(planes * 4)
@@ -61,16 +67,20 @@ class Bottleneck(nn.Module):
 
 
 class SlowFast(nn.Module):
-    def __init__(self, block, layers, alpha=8, beta=0.125, fuse_only_conv=True, fuse_kernel_size=5, slow_full_span=False):
-        super(SlowFast, self).__init__()
-        
+    def __init__(
+        self, block, layers, alpha=8, beta=0.125, fuse_only_conv=True, fuse_kernel_size=5, slow_full_span=False
+    ):
+        super().__init__()
+
         self.alpha = alpha
         self.beta = beta
         self.slow_full_span = slow_full_span
 
-        '''Fast Network'''
+        """Fast Network"""
         self.fast_inplanes = int(64 * beta)
-        self.fast_conv1 = nn.Conv3d(3, self.fast_inplanes, kernel_size=(5, 7, 7), stride=(1, 2, 2), padding=(2, 3, 3), bias=False)
+        self.fast_conv1 = nn.Conv3d(
+            3, self.fast_inplanes, kernel_size=(5, 7, 7), stride=(1, 2, 2), padding=(2, 3, 3), bias=False
+        )
         self.fast_bn1 = BN(self.fast_inplanes)
         self.fast_relu = nn.ReLU(inplace=True)
         self.fast_maxpool = nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 2, 2), padding=(0, 1, 1))
@@ -80,9 +90,11 @@ class SlowFast(nn.Module):
         self.fast_res3 = self._make_layer_fast(block, int(256 * beta), layers[2], stride=2, head_conv=3)
         self.fast_res4 = self._make_layer_fast(block, int(512 * beta), layers[3], head_conv=3, dilation=2)
 
-        '''Slow Network'''
+        """Slow Network"""
         self.slow_inplanes = 64
-        self.slow_conv1 = nn.Conv3d(3, self.slow_inplanes, kernel_size=(1, 7, 7), stride=(1, 2, 2), padding=(0, 3, 3), bias=False)
+        self.slow_conv1 = nn.Conv3d(
+            3, self.slow_inplanes, kernel_size=(1, 7, 7), stride=(1, 2, 2), padding=(0, 3, 3), bias=False
+        )
         self.slow_bn1 = BN(self.slow_inplanes)
         self.slow_relu = nn.ReLU(inplace=True)
         self.slow_maxpool = nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 2, 2), padding=(0, 1, 1))
@@ -92,19 +104,26 @@ class SlowFast(nn.Module):
         self.slow_res3 = self._make_layer_slow(block, 256, layers[2], stride=2, head_conv=3)
         self.slow_res4 = self._make_layer_slow(block, 512, layers[3], head_conv=3, dilation=2)
 
-        '''Lateral Connections'''
+        """Lateral Connections"""
         fuse_padding = fuse_kernel_size // 2
-        fuse_kwargs = {'kernel_size': (fuse_kernel_size, 1, 1), 'stride': (alpha, 1, 1), 'padding': (fuse_padding, 0, 0), 'bias': False}
+        fuse_kwargs = {
+            "kernel_size": (fuse_kernel_size, 1, 1),
+            "stride": (alpha, 1, 1),
+            "padding": (fuse_padding, 0, 0),
+            "bias": False,
+        }
         if fuse_only_conv:
+
             def fuse_func(in_channels, out_channels):
                 return nn.Conv3d(in_channels, out_channels, **fuse_kwargs)
+
         else:
+
             def fuse_func(in_channels, out_channels):
                 return nn.Sequential(
-                    nn.Conv3d(in_channels, out_channels, **fuse_kwargs),
-                    BN(out_channels),
-                    nn.ReLU(inplace=True)
+                    nn.Conv3d(in_channels, out_channels, **fuse_kwargs), BN(out_channels), nn.ReLU(inplace=True)
                 )
+
         self.Tconv1 = fuse_func(int(64 * beta), int(128 * beta))
         self.Tconv2 = fuse_func(int(256 * beta), int(512 * beta))
         self.Tconv3 = fuse_func(int(512 * beta), int(1024 * beta))
@@ -120,10 +139,12 @@ class SlowFast(nn.Module):
                     0,
                     input.shape[2] - 1,
                     input.shape[2] // self.alpha,
-                ).long().cuda(),
+                )
+                .long()
+                .cuda(),
             )
         else:
-            slow_input = input[:, :, ::self.alpha, :, :]
+            slow_input = input[:, :, :: self.alpha, :, :]
         slow = self.SlowPath(slow_input, Tc)
         return [slow, fast]
 
@@ -162,11 +183,7 @@ class SlowFast(nn.Module):
         if stride != 1 or self.fast_inplanes != planes * block.expansion:
             downsample = nn.Sequential(
                 nn.Conv3d(
-                    self.fast_inplanes,
-                    planes * block.expansion,
-                    kernel_size=1,
-                    stride=(1, stride, stride),
-                    bias=False
+                    self.fast_inplanes, planes * block.expansion, kernel_size=1, stride=(1, stride, stride), bias=False
                 )
             )
 
@@ -184,11 +201,7 @@ class SlowFast(nn.Module):
         if stride != 1 or fused_inplanes != planes * block.expansion:
             downsample = nn.Sequential(
                 nn.Conv3d(
-                    fused_inplanes,
-                    planes * block.expansion,
-                    kernel_size=1,
-                    stride=(1, stride, stride),
-                    bias=False
+                    fused_inplanes, planes * block.expansion, kernel_size=1, stride=(1, stride, stride), bias=False
                 )
             )
 
@@ -200,30 +213,26 @@ class SlowFast(nn.Module):
 
         return nn.Sequential(*layers)
 
-    
+
 def slowfast50(**kwargs):
-    """Constructs a SlowFast-50 model.
-    """
+    """Constructs a SlowFast-50 model."""
     model = SlowFast(Bottleneck, [3, 4, 6, 3], **kwargs)
     return model
 
 
 def slowfast101(**kwargs):
-    """Constructs a SlowFast-101 model.
-    """
+    """Constructs a SlowFast-101 model."""
     model = SlowFast(Bottleneck, [3, 4, 23, 3], **kwargs)
     return model
 
 
 def slowfast152(**kwargs):
-    """Constructs a SlowFast-152 model.
-    """
+    """Constructs a SlowFast-152 model."""
     model = SlowFast(Bottleneck, [3, 8, 36, 3], **kwargs)
     return model
 
 
 def slowfast200(**kwargs):
-    """Constructs a SlowFast-200 model.
-    """
+    """Constructs a SlowFast-200 model."""
     model = SlowFast(Bottleneck, [3, 24, 36, 3], **kwargs)
     return model

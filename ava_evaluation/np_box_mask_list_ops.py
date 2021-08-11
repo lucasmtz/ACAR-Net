@@ -21,9 +21,7 @@ Example box operations that are supported:
 """
 import numpy as np
 
-from . import np_box_list_ops
-from . import np_box_mask_list
-from . import np_mask_ops
+from . import np_box_list_ops, np_box_mask_list, np_mask_ops
 
 
 def box_list_to_box_mask_list(boxlist):
@@ -38,14 +36,12 @@ def box_list_to_box_mask_list(boxlist):
     Raises:
       ValueError: If boxlist does not contain `masks` as a field.
     """
-    if not boxlist.has_field('masks'):
-        raise ValueError('boxlist does not contain mask field.')
-    box_mask_list = np_box_mask_list.BoxMaskList(
-        box_data=boxlist.get(),
-        mask_data=boxlist.get_field('masks'))
+    if not boxlist.has_field("masks"):
+        raise ValueError("boxlist does not contain mask field.")
+    box_mask_list = np_box_mask_list.BoxMaskList(box_data=boxlist.get(), mask_data=boxlist.get_field("masks"))
     extra_fields = boxlist.get_extra_fields()
     for key in extra_fields:
-        if key != 'masks':
+        if key != "masks":
             box_mask_list.data[key] = boxlist.get_field(key)
     return box_mask_list
 
@@ -72,8 +68,7 @@ def intersection(box_mask_list1, box_mask_list2):
     Returns:
       a numpy array with shape [N*M] representing pairwise intersection area
     """
-    return np_mask_ops.intersection(box_mask_list1.get_masks(),
-                                    box_mask_list2.get_masks())
+    return np_mask_ops.intersection(box_mask_list1.get_masks(), box_mask_list2.get_masks())
 
 
 def iou(box_mask_list1, box_mask_list2):
@@ -86,8 +81,7 @@ def iou(box_mask_list1, box_mask_list2):
     Returns:
       a numpy array with shape [N, M] representing pairwise iou scores.
     """
-    return np_mask_ops.iou(box_mask_list1.get_masks(),
-                           box_mask_list2.get_masks())
+    return np_mask_ops.iou(box_mask_list1.get_masks(), box_mask_list2.get_masks())
 
 
 def ioa(box_mask_list1, box_mask_list2):
@@ -131,15 +125,12 @@ def gather(box_mask_list, indices, fields=None):
           indices are not of type int_
     """
     if fields is not None:
-        if 'masks' not in fields:
-            fields.append('masks')
-    return box_list_to_box_mask_list(
-        np_box_list_ops.gather(
-            boxlist=box_mask_list, indices=indices, fields=fields))
+        if "masks" not in fields:
+            fields.append("masks")
+    return box_list_to_box_mask_list(np_box_list_ops.gather(boxlist=box_mask_list, indices=indices, fields=fields))
 
 
-def sort_by_field(box_mask_list, field,
-                  order=np_box_list_ops.SortOrder.DESCEND):
+def sort_by_field(box_mask_list, field, order=np_box_list_ops.SortOrder.DESCEND):
     """Sort boxes and associated fields according to a scalar field.
 
     A common use case is reordering the boxes according to descending scores.
@@ -153,15 +144,10 @@ def sort_by_field(box_mask_list, field,
       sorted_box_mask_list: A sorted BoxMaskList with the field in the specified
         order.
     """
-    return box_list_to_box_mask_list(
-        np_box_list_ops.sort_by_field(
-            boxlist=box_mask_list, field=field, order=order))
+    return box_list_to_box_mask_list(np_box_list_ops.sort_by_field(boxlist=box_mask_list, field=field, order=order))
 
 
-def non_max_suppression(box_mask_list,
-                        max_output_size=10000,
-                        iou_threshold=1.0,
-                        score_threshold=-10.0):
+def non_max_suppression(box_mask_list, max_output_size=10000, iou_threshold=1.0, score_threshold=-10.0):
     """Non maximum suppression.
 
     This op greedily selects a subset of detection bounding boxes, pruning
@@ -188,18 +174,18 @@ def non_max_suppression(box_mask_list,
       ValueError: if threshold is not in [0, 1]
       ValueError: if max_output_size < 0
     """
-    if not box_mask_list.has_field('scores'):
-        raise ValueError('Field scores does not exist')
-    if iou_threshold < 0. or iou_threshold > 1.0:
-        raise ValueError('IOU threshold must be in [0, 1]')
+    if not box_mask_list.has_field("scores"):
+        raise ValueError("Field scores does not exist")
+    if iou_threshold < 0.0 or iou_threshold > 1.0:
+        raise ValueError("IOU threshold must be in [0, 1]")
     if max_output_size < 0:
-        raise ValueError('max_output_size must be bigger than 0.')
+        raise ValueError("max_output_size must be bigger than 0.")
 
     box_mask_list = filter_scores_greater_than(box_mask_list, score_threshold)
     if box_mask_list.num_boxes() == 0:
         return box_mask_list
 
-    box_mask_list = sort_by_field(box_mask_list, 'scores')
+    box_mask_list = sort_by_field(box_mask_list, "scores")
 
     # Prevent further computation if NMS is disabled.
     if iou_threshold == 1.0:
@@ -226,17 +212,15 @@ def non_max_suppression(box_mask_list,
                 if valid_indices.size == 0:
                     break
 
-                intersect_over_union = np_mask_ops.iou(
-                    np.expand_dims(masks[i], axis=0), masks[valid_indices])
+                intersect_over_union = np_mask_ops.iou(np.expand_dims(masks[i], axis=0), masks[valid_indices])
                 intersect_over_union = np.squeeze(intersect_over_union, axis=0)
                 is_index_valid[valid_indices] = np.logical_and(
-                    is_index_valid[valid_indices],
-                    intersect_over_union <= iou_threshold)
+                    is_index_valid[valid_indices], intersect_over_union <= iou_threshold
+                )
     return gather(box_mask_list, np.array(selected_indices))
 
 
-def multi_class_non_max_suppression(box_mask_list, score_thresh, iou_thresh,
-                                    max_output_size):
+def multi_class_non_max_suppression(box_mask_list, score_thresh, iou_thresh, max_output_size):
     """Multi-class version of non maximum suppression.
 
     This op greedily selects a subset of detection bounding boxes, pruning
@@ -268,48 +252,42 @@ def multi_class_non_max_suppression(box_mask_list, score_thresh, iou_thresh,
         not have a valid scores field.
     """
     if not 0 <= iou_thresh <= 1.0:
-        raise ValueError('thresh must be between 0 and 1')
+        raise ValueError("thresh must be between 0 and 1")
     if not isinstance(box_mask_list, np_box_mask_list.BoxMaskList):
-        raise ValueError('box_mask_list must be a box_mask_list')
-    if not box_mask_list.has_field('scores'):
-        raise ValueError('input box_mask_list must have \'scores\' field')
-    scores = box_mask_list.get_field('scores')
+        raise ValueError("box_mask_list must be a box_mask_list")
+    if not box_mask_list.has_field("scores"):
+        raise ValueError("input box_mask_list must have 'scores' field")
+    scores = box_mask_list.get_field("scores")
     if len(scores.shape) == 1:
         scores = np.reshape(scores, [-1, 1])
     elif len(scores.shape) == 2:
         if scores.shape[1] is None:
-            raise ValueError('scores field must have statically defined second '
-                             'dimension')
+            raise ValueError("scores field must have statically defined second " "dimension")
     else:
-        raise ValueError('scores field must be of rank 1 or 2')
+        raise ValueError("scores field must be of rank 1 or 2")
 
     num_boxes = box_mask_list.num_boxes()
     num_scores = scores.shape[0]
     num_classes = scores.shape[1]
 
     if num_boxes != num_scores:
-        raise ValueError('Incorrect scores field length: actual vs expected.')
+        raise ValueError("Incorrect scores field length: actual vs expected.")
 
     selected_boxes_list = []
     for class_idx in range(num_classes):
         box_mask_list_and_class_scores = np_box_mask_list.BoxMaskList(
-            box_data=box_mask_list.get(),
-            mask_data=box_mask_list.get_masks())
+            box_data=box_mask_list.get(), mask_data=box_mask_list.get_masks()
+        )
         class_scores = np.reshape(scores[0:num_scores, class_idx], [-1])
-        box_mask_list_and_class_scores.add_field('scores', class_scores)
-        box_mask_list_filt = filter_scores_greater_than(
-            box_mask_list_and_class_scores, score_thresh)
+        box_mask_list_and_class_scores.add_field("scores", class_scores)
+        box_mask_list_filt = filter_scores_greater_than(box_mask_list_and_class_scores, score_thresh)
         nms_result = non_max_suppression(
-            box_mask_list_filt,
-            max_output_size=max_output_size,
-            iou_threshold=iou_thresh,
-            score_threshold=score_thresh)
-        nms_result.add_field(
-            'classes',
-            np.zeros_like(nms_result.get_field('scores')) + class_idx)
+            box_mask_list_filt, max_output_size=max_output_size, iou_threshold=iou_thresh, score_threshold=score_thresh
+        )
+        nms_result.add_field("classes", np.zeros_like(nms_result.get_field("scores")) + class_idx)
         selected_boxes_list.append(nms_result)
     selected_boxes = np_box_list_ops.concatenate(selected_boxes_list)
-    sorted_boxes = np_box_list_ops.sort_by_field(selected_boxes, 'scores')
+    sorted_boxes = np_box_list_ops.sort_by_field(selected_boxes, "scores")
     return box_list_to_box_mask_list(boxlist=sorted_boxes)
 
 
@@ -360,10 +338,9 @@ def concatenate(box_mask_lists, fields=None):
         contained in all box_mask_lists
     """
     if fields is not None:
-        if 'masks' not in fields:
-            fields.append('masks')
-    return box_list_to_box_mask_list(
-        np_box_list_ops.concatenate(boxlists=box_mask_lists, fields=fields))
+        if "masks" not in fields:
+            fields.append("masks")
+    return box_list_to_box_mask_list(np_box_list_ops.concatenate(boxlists=box_mask_lists, fields=fields))
 
 
 def filter_scores_greater_than(box_mask_list, thresh):
@@ -385,15 +362,13 @@ def filter_scores_greater_than(box_mask_list, thresh):
         if it does not have a scores field
     """
     if not isinstance(box_mask_list, np_box_mask_list.BoxMaskList):
-        raise ValueError('box_mask_list must be a BoxMaskList')
-    if not box_mask_list.has_field('scores'):
-        raise ValueError('input box_mask_list must have \'scores\' field')
-    scores = box_mask_list.get_field('scores')
+        raise ValueError("box_mask_list must be a BoxMaskList")
+    if not box_mask_list.has_field("scores"):
+        raise ValueError("input box_mask_list must have 'scores' field")
+    scores = box_mask_list.get_field("scores")
     if len(scores.shape) > 2:
-        raise ValueError('Scores should have rank 1 or 2')
+        raise ValueError("Scores should have rank 1 or 2")
     if len(scores.shape) == 2 and scores.shape[1] != 1:
-        raise ValueError('Scores should have rank 1 or have shape '
-                         'consistent with [None, 1]')
-    high_score_indices = np.reshape(np.where(np.greater(scores, thresh)),
-                                    [-1]).astype(np.int32)
+        raise ValueError("Scores should have rank 1 or have shape " "consistent with [None, 1]")
+    high_score_indices = np.reshape(np.where(np.greater(scores, thresh)), [-1]).astype(np.int32)
     return gather(box_mask_list, high_score_indices)
