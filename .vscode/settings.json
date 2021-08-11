@@ -1,14 +1,14 @@
 {
-    "python.defaultInterpreterPath": "./env/bin/python3.9",
-    "python.condaPath": "~/anaconda3/bin/conda",
-    "python.terminal.activateEnvInCurrentTerminal": true,
-    "python.terminal.activateEnvironment": true,
-    "search.exclude": {
-        "**/env/**": true,
-        "**/.git/**": true
-        },
-    "files.watcherExclude": {
-        "**/.git/**": true,
-        "**/env/**": true
-    }
+  "files.watcherExclude": {
+    "**/.git/**": true,
+    "**/env/**": true
+  },
+  "python.condaPath": "~/anaconda3/bin/conda",
+  "python.defaultInterpreterPath": "./env/bin/python3.9",
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.terminal.activateEnvironment": true,
+  "search.exclude": {
+    "**/.git/**": true,
+    "**/env/**": true
+  }
 }
