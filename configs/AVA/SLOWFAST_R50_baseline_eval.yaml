@@ -38,7 +38,7 @@ loss:
     pose_softmax: true
 
 train:
-  root_path: data
+  root_path: data/ava/frames
   annotation_path: annotations/ava_train_v2.2_with_fair_0.9.pkl
   batch_size: 1
 
@@ -81,7 +81,7 @@ train:
     warmup_epochs: 1
 
 val:
-  root_path: data
+  root_path: data/ava/frames
   annotation_path: annotations/ava_val_v2.2_fair_0.85.pkl
   batch_size: 1
 
