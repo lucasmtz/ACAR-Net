@@ -1,4 +1,4 @@
-# Update the Apt repository cache 
+# Update the Apt repository cache
 sudo apt -y update && sudo apt -y upgrade && sudo apt -y autoremove
 sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y autoremove
 
@@ -13,7 +13,7 @@ sudo apt-get install g++ freeglut3-dev build-essential libx11-dev \
 # Install latest nvidia driver
 sudo ubuntu-drivers install
 
-# Install kernel headers and development packages for the currently running kernel 
+# Install kernel headers and development packages for the currently running kernel
 sudo apt-get install linux-headers-$(uname -r)
 
 # Download latest CUDA toolkit from https://developer.nvidia.com/cuda-downloads
@@ -39,7 +39,7 @@ cuda-install-samples-11.4.sh .
 # Compile them
 cd ~/NVIDIA_CUDA-11.4_Samples
 make
-# Test 
+# Test
 sudo ~/NVIDIA_CUDA-11.4_Samples/bin/x86_64/linux/release/deviceQuery
 sudo ~/NVIDIA_CUDA-11.4_Samples/bin/x86_64/linux/release/bandwidthTest
 
