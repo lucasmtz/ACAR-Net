@@ -26,6 +26,8 @@ if [[ ! -d "${ANNOT_DIR}" ]]; then
 fi
 wget https://storage.googleapis.com/deepmind-media/Datasets/ava_kinetics_v1_0.tar.gz -P ${ANNOT_DIR}
 tar -C ${ANNOT_DIR} -xzvf ${ANNOT_DIR}/ava_kinetics_v1_0.tar.gz
+rm -r ${ANNOT_DIR}/ava_kinetics_v1_0/
+mv ${ANNOT_DIR}/ava_kinetics_v1_0/* ${ANNOT_DIR}/
 rm ${ANNOT_DIR}/ava_kinetics_v1_0.tar.gz
 gdown --id 1teKrNNnErHPsnORJNJCZaA_U_q0tor93 --output "${ANNOT_DIR}/ava_train_v2.2.pkl"
 gdown --id 1JcHn6S8KTvOI6igbpwnU5Yf_KnSdz2x_ --output "${ANNOT_DIR}/ava_train_v2.2_with_fair_0.9.pkl"
